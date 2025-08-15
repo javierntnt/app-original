@@ -38,7 +38,7 @@ function updateStats() {
 
   historyList.innerHTML = '';
   rounds.slice().reverse().forEach(r => {
-    const d = document.createElement('div'); 
+    const d = document.createElement('div');
     d.className = 'histItem';
     d.innerHTML = `<div>${new Date(r.t).toLocaleTimeString()}</div><div>${r.time ? r.time + ' ms' : '<em style="color:var(--muted)">Descalificado</em>'}</div>`;
     historyList.appendChild(d);
@@ -63,7 +63,6 @@ function startRound() {
   mainText.textContent = 'Preparado...';
   subText.textContent = 'Espera el cambio y toca lo más rápido que puedas';
 
-  // espera aleatoria entre 1000 y 2500 ms
   const wait = 1000 + Math.floor(Math.random() * 1500);
   clearTimeout(timeoutId);
   timeoutId = setTimeout(() => {
@@ -84,9 +83,8 @@ function tooSoon() {
   subText.textContent = 'Se descalifica esta ronda';
   vibrate([50, 30, 50]);
   rounds.push({ t: Date.now(), time: null });
-  saveRounds(); 
+  saveRounds();
   updateStats();
-  // volver a idle luego de 900ms
   setTimeout(() => { toIdle(); }, 900);
 }
 
@@ -96,14 +94,13 @@ function registerTap() {
     return;
   }
   if (state === 'waiting') {
-    // tocó antes de tiempo
     tooSoon();
     return;
   }
   if (state === 'go') {
     const diff = Math.round(performance.now() - startTs);
     rounds.push({ t: Date.now(), time: diff });
-    saveRounds(); 
+    saveRounds();
     updateStats();
     mainText.textContent = diff + ' ms';
     subText.textContent = '¡Buen trabajo! Toca para otra ronda';
@@ -117,44 +114,49 @@ function registerTap() {
   }
 }
 
-// Eventos (ahora solo pointerdown para evitar doble toque en móvil)
-screen.addEventListener('pointerdown', (e) => {
-  e.preventDefault(); // Evita click fantasma en móviles
+// Evento unificado para PC y móvil
+function handleTap(e) {
+  e.preventDefault(); // evita click fantasma y scroll accidental
   registerTap();
-});
+}
+
+if ('ontouchstart' in window) {
+  // Dispositivo táctil
+  screen.addEventListener('touchstart', handleTap, { passive: false });
+} else {
+  // PC o mouse
+  screen.addEventListener('mousedown', handleTap);
+}
 
 startBtn.addEventListener('click', () => startRound());
 resetBtn.addEventListener('click', () => {
-  if (!confirm('Borrar historial?')) return; 
-  rounds = []; 
-  saveRounds(); 
+  if (!confirm('Borrar historial?')) return;
+  rounds = [];
+  saveRounds();
   updateStats();
 });
 
 bestBtn.addEventListener('click', () => {
   const times = rounds.map(r => r.time).filter(t => typeof t === 'number');
-  if (times.length === 0) { 
-    alert('No hay tiempos válidos todavía.'); 
-    return; 
+  if (times.length === 0) {
+    alert('No hay tiempos válidos todavía.');
+    return;
   }
   const best = Math.min(...times);
   const text = `Mi mejor tiempo de reacción: ${best} ms. ¿Puedes superarlo?`;
-  if (navigator.share) { 
-    navigator.share({ title: 'Prueba de Reacción', text }).catch(() => {}); 
-  }
-  else { 
-    prompt('Copia y comparte tu mejor tiempo:', text); 
+  if (navigator.share) {
+    navigator.share({ title: 'Prueba de Reacción', text }).catch(() => {});
+  } else {
+    prompt('Copia y comparte tu mejor tiempo:', text);
   }
 });
 
-// inicializar
 updateStats();
 toIdle();
 
-// accesibilidad: iniciar con Enter o espacio
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') { 
-    e.preventDefault(); 
-    registerTap(); 
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    registerTap();
   }
 });
