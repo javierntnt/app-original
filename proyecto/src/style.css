@@ -94,3 +94,20 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@media (max-width: 600px) {
+  .screen {
+    height: 60vh;
+  }
+  .bigText {
+    font-size: 8vw;
+  }
+  .subText {
+    font-size: 4vw;
+  }
+  .controls button {
+    flex: 1 1 100%;
+    font-size: 4vw;
+    padding: 12px;
+  }
+}
